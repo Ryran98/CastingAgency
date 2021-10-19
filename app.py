@@ -32,7 +32,7 @@ def create_app(test_config=None):
 
   @app.route('/actors', methods=['GET'])
   @requires_auth('get:actors')
-  def get_actors():
+  def get_actors(payload):
     actors = Actor.query.order_by(Actor.id).all()
     selected_actors = paginate_items(request, actors)
 
@@ -50,7 +50,7 @@ def create_app(test_config=None):
 
   @app.route('/movies', methods=['GET'])
   @requires_auth('get:movies')
-  def get_movies():
+  def get_movies(payload):
     movies = Movie.query.order_by(Movie.id).all()
     selected_movies = paginate_items(request, movies)
 
@@ -68,7 +68,7 @@ def create_app(test_config=None):
 
   @app.route('/actors/<int:actor_id>', methods=['DELETE'])
   @requires_auth('delete:actors')
-  def delete_actor(actor_id):
+  def delete_actor(payload, actor_id):
     actor = Actor.query.get(actor_id)
 
     if actor is None:
@@ -87,7 +87,7 @@ def create_app(test_config=None):
 
   @app.route('/movies/<int:movie_id>', methods=['DELETE'])
   @requires_auth('delete:movies')
-  def delete_movie(movie_id):
+  def delete_movie(payload, movie_id):
     movie = Movie.query.get(movie_id)
 
     if movie is None:
@@ -106,7 +106,7 @@ def create_app(test_config=None):
 
   @app.route('/actors', methods=['POST'])
   @requires_auth('post:actors')
-  def new_actor():
+  def new_actor(payload):
     body = request.get_json()
     name = body.get('name', None)
     age = body.get('age', None)
@@ -145,7 +145,7 @@ def create_app(test_config=None):
 
   @app.route('/movies', methods=['POST'])
   @requires_auth('post:movies')
-  def new_movie():
+  def new_movie(payload):
     body = request.get_json()
     title = body.get('title', None)
     release_date = body.get('release_date', None)
@@ -177,7 +177,7 @@ def create_app(test_config=None):
 
   @app.route('/actors/<int:actor_id>', methods=['PATCH'])
   @requires_auth('update:actors')
-  def update_actor(actor_id):
+  def update_actor(payload, actor_id):
     actor = Actor.query.get(actor_id)
 
     if not actor:
@@ -208,7 +208,7 @@ def create_app(test_config=None):
 
   @app.route('/movies/<int:movie_id>', methods=['PATCH'])
   @requires_auth('update:movies')
-  def update_movie(movie_id):
+  def update_movie(payload, movie_id):
     movie = Movie.query.get(movie_id)
 
     if not movie:
@@ -236,7 +236,7 @@ def create_app(test_config=None):
 
   @app.route('/movieroles', methods=['POST'])
   @requires_auth('post:movie_roles')
-  def new_movie_role():
+  def new_movie_role(payload):
     body = request.get_json()
     actor_id = body.get('actor_id', None)
     movie_id = body.get('movie_id', None)
@@ -300,6 +300,14 @@ def create_app(test_config=None):
       'error': 422,
       'message': 'unprocessable'
     }), 422
+
+  @app.errorhandler(AuthError)
+  def auth_error(error):
+    return jsonify({
+      'success': False,
+      'error': error.status_code,
+      'message': error.error['description']
+    })
 
   return app
 
