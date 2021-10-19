@@ -1,0 +1,1 @@
+INSERT INTO "Actor" (name, age, gender) VALUES ("Ryan Reynolds", 44, "Male");

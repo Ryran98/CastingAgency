@@ -6,9 +6,9 @@ from urllib.request import urlopen
 
 
 
-AUTH0_DOMAIN = 'rw-udacity.eu.auth0.com'
+AUTH0_DOMAIN = 'rw1.eu.auth0.com'
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'http://127.0.0.1:5000'
+API_AUDIENCE = 'https://rwcastingagency.herokuapp.com/'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):
