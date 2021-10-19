@@ -2,8 +2,20 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
+
 from models import db, Actor, Movie, MovieRole, setup_db
 from auth.auth import AuthError, requires_auth
+
+ITEMS_PER_PAGE = 10
+
+def paginate_items(request, items):
+  page = request.args.get('page', 1, type=int)
+  start = (page - 1) * ITEMS_PER_PAGE
+  end = page * ITEMS_PER_PAGE
+
+  formatted_items = [item.format() for item in items]
+
+  return formatted_items[start:end]
 
 def create_app(test_config=None):
   # create and configure the app
@@ -19,46 +31,43 @@ def create_app(test_config=None):
     return response
 
   @app.route('/actors', methods=['GET'])
+  @requires_auth('get:actors')
   def get_actors():
-    actors = Actor.query.all()
+    actors = Actor.query.order_by(Actor.id).all()
+    selected_actors = paginate_items(request, actors)
 
-    if not actors or len(actors) < 1:
+    if not selected_actors or len(selected_actors) < 1:
       abort(404)
     
     try:
-      actors_formatted = []
-      for actor in actors:
-        actors_formatted.append(actor.format())
-
       return jsonify({
         'success': True,
-        'actors': actors_formatted
+        'actors': selected_actors
       }), 200
 
     except:
       abort(422)
 
   @app.route('/movies', methods=['GET'])
+  @requires_auth('get:movies')
   def get_movies():
-    movies = Movie.query.all()
+    movies = Movie.query.order_by(Movie.id).all()
+    selected_movies = paginate_items(request, movies)
 
-    if not movies or len(movies) < 1:
+    if not selected_movies or len(selected_movies) < 1:
       abort(404)
     
     try:
-      movies_formatted = []
-      for movie in movies:
-        movies_formatted.append(movie.format())
-      
       return jsonify({
         'success': True,
-        'movies': movies_formatted
+        'movies': selected_movies
       }), 200
 
     except:
       abort(422)
 
   @app.route('/actors/<int:actor_id>', methods=['DELETE'])
+  @requires_auth('delete:actors')
   def delete_actor(actor_id):
     actor = Actor.query.get(actor_id)
 
@@ -77,6 +86,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movies/<int:movie_id>', methods=['DELETE'])
+  @requires_auth('delete:movies')
   def delete_movie(movie_id):
     movie = Movie.query.get(movie_id)
 
@@ -95,6 +105,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/actors', methods=['POST'])
+  @requires_auth('post:actors')
   def new_actor():
     body = request.get_json()
     name = body.get('name', None)
@@ -106,19 +117,19 @@ def create_app(test_config=None):
         'success': False,
         "error": 422,
         'message': 'Missing name'
-      })
+      }), 422
     if not age:
       return jsonify({
         'success': False,
         "error": 422,
         'message': 'Missing age'
-      })
+      }), 422
     if not gender:
       return jsonify({
         'success': False,
         "error": 422,
         'message': 'Missing gender'
-      })
+      }), 422
       
     try:
       actor = Actor(name=name, age=age, gender=gender)
@@ -133,6 +144,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movies', methods=['POST'])
+  @requires_auth('post:movies')
   def new_movie():
     body = request.get_json()
     title = body.get('title', None)
@@ -143,13 +155,13 @@ def create_app(test_config=None):
         'success': False,
         "error": 422,
         'message': 'Missing title'
-      })
+      }), 422
     if not release_date:
       return jsonify({
         'success': False,
         "error": 422,
         'message': 'Missing release date'
-      })
+      }), 422
 
     try:
       movie = Movie(title=title, release_date=release_date)
@@ -164,6 +176,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/actors/<int:actor_id>', methods=['PATCH'])
+  @requires_auth('update:actors')
   def update_actor(actor_id):
     actor = Actor.query.get(actor_id)
 
@@ -194,6 +207,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movies/<int:movie_id>', methods=['PATCH'])
+  @requires_auth('update:movies')
   def update_movie(movie_id):
     movie = Movie.query.get(movie_id)
 
@@ -221,6 +235,7 @@ def create_app(test_config=None):
       abort(422)
 
   @app.route('/movieroles', methods=['POST'])
+  @requires_auth('post:movie_roles')
   def new_movie_role():
     body = request.get_json()
     actor_id = body.get('actor_id', None)
@@ -234,13 +249,13 @@ def create_app(test_config=None):
         'success': False,
         'error': 422,
         'message': 'No actor could be found for id ' + actor_id
-      })
+      }), 422
     if not movie:
       return jsonify({
         'success': False,
         'error': 422,
         'message': 'No movie could be found for id ' + movie_id
-      })
+      }), 422
 
     try:
       movie_role = MovieRole(actor=actor, movie=movie)
