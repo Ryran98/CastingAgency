@@ -6,13 +6,15 @@ database_path = os.getenv('DATABASE_URL')
 
 db = SQLAlchemy()
 
-def setup_db(app, database_path=database_path):
+def setup_db(app, database_path=database_path, test=False):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
-    #db.drop_all()
-    #db.create_all()
+
+    if test:
+        db.drop_all()
+        db.create_all()
 
 class Actor(db.Model):
     __tablename__ = 'Actor'

@@ -1,3 +1,4 @@
+import os
 import json
 from flask import request, _request_ctx_stack, abort
 from functools import wraps
@@ -6,9 +7,9 @@ from urllib.request import urlopen
 
 
 
-AUTH0_DOMAIN = 'rw1.eu.auth0.com'
+AUTH0_DOMAIN = os.getenv('AUTH0_DOMAIN')
+API_AUDIENCE = os.getenv('API_AUDIENCE')
 ALGORITHMS = ['RS256']
-API_AUDIENCE = 'https://rwcastingagency.herokuapp.com/'
 
 class AuthError(Exception):
     def __init__(self, error, status_code):

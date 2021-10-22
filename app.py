@@ -248,13 +248,13 @@ def create_app(test_config=None):
       return jsonify({
         'success': False,
         'error': 422,
-        'message': 'No actor could be found for id ' + actor_id
+        'message': 'No actor could be found for id ' + str(actor_id)
       }), 422
     if not movie:
       return jsonify({
         'success': False,
         'error': 422,
-        'message': 'No movie could be found for id ' + movie_id
+        'message': 'No movie could be found for id ' + str(movie_id)
       }), 422
 
     try:
@@ -307,7 +307,7 @@ def create_app(test_config=None):
       'success': False,
       'error': error.status_code,
       'message': error.error['description']
-    })
+    }), error.status_code
 
   return app
 
